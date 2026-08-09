@@ -13,31 +13,46 @@ echo "=========================================="
 echo "    DuckDNS Docker Setup & Deployment     "
 echo "=========================================="
 
-# 1. Prompt for DuckDNS Token
-read -rsp "Enter your DuckDNS Token: " DUCKDNS_TOKEN < /dev/tty
+# 1. Prompt for DuckDNS Subdomain
+read -rp "Enter your DuckDNS Subdomain (e.g., awsus11elm): " RAW_SUBDOMAIN < /dev/tty
 echo ""
+
+# Sanitize subdomain: trim whitespace/newlines & strip .duckdns.org if typed by mistake
+SUBDOMAIN=$(echo "$RAW_SUBDOMAIN" | tr -d '\r\n ' | sed -E 's/\.duckdns\.org$//I')
+
+if [[ -z "$SUBDOMAIN" ]]; then
+    echo "Error: Subdomain cannot be empty."
+    exit 1
+fi
+
+# 2. Prompt for DuckDNS Token
+read -rsp "Enter your DuckDNS Token: " RAW_TOKEN < /dev/tty
+echo ""
+
+# Sanitize token: trim whitespace/newlines
+DUCKDNS_TOKEN=$(echo "$RAW_TOKEN" | tr -d '\r\n ')
+
 if [[ -z "$DUCKDNS_TOKEN" ]]; then
     echo "Error: DuckDNS token cannot be empty."
     exit 1
 fi
 
-SUBDOMAIN="awsus11elm"
 DOMAIN="${SUBDOMAIN}.duckdns.org"
 
-# 2. Ensure Docker is installed
+# 3. Ensure Docker is installed
 if ! command -v docker &> /dev/null; then
     echo "Error: Docker is not installed. Please run setup-wg.sh first or install Docker."
     exit 1
 fi
 
-# 3. Create DuckDNS Directory & Config Folder
+# 4. Create DuckDNS Directory & Config Folder
 WORKDIR="${HOME}/duckdns"
 CONFIG_DIR="${WORKDIR}/config"
 echo "--> Creating directories at ${WORKDIR}..."
 mkdir -p "${CONFIG_DIR}"
 cd "${WORKDIR}"
 
-# 4. Create Compose File using explicit user paths
+# 5. Create Compose File using explicit user paths
 cat <<EOF > docker-compose.yml
 services:
   duckdns:
@@ -56,9 +71,10 @@ services:
     restart: unless-stopped
 EOF
 
-# 5. Launch Stack
+# 6. Launch Stack
 echo "--> Launching DuckDNS container..."
-sudo docker compose up -d
+sudo docker compose down --remove-orphans 2>/dev/null || true
+sudo docker compose up -d --force-recreate
 
 echo ""
 echo "=========================================="
