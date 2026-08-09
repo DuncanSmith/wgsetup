@@ -9,8 +9,8 @@ echo "=========================================="
 echo "    wg-easy EC2 Setup & Deployment       "
 echo "=========================================="
 
-# 1. Prompt for Web UI Password
-read -rsp "Enter a password for the wg-easy Web UI: " UI_PASSWORD
+# 1. Prompt for Web UI Password (forcing input from /dev/tty for curl | bash compatibility)
+read -rsp "Enter a password for the wg-easy Web UI: " UI_PASSWORD < /dev/tty
 echo ""
 if [[ -z "$UI_PASSWORD" ]]; then
     echo "Error: Password cannot be empty."
@@ -51,15 +51,17 @@ if [[ -z "$PUBLIC_IP" ]]; then
 fi
 echo "Detected Public IP: ${PUBLIC_IP}"
 
-# 7. Generate Password Hash via wg-easy
+# 7. Generate & Parse Password Hash via wg-easy
 echo "--> Generating password hash..."
-# Run docker using sudo here to handle cases where group changes haven't taken effect in subshell
-PASSWORD_HASH=$(sudo docker run --rm ghcr.io/wg-easy/wg-easy wgpw "${UI_PASSWORD}" | tr -d '\r\n')
+RAW_HASH_OUTPUT=$(sudo docker run --rm ghcr.io/wg-easy/wg-easy wgpw "${UI_PASSWORD}")
+
+# Extract only the bcrypt hash string (stripping PASSWORD_HASH= and single quotes)
+PASSWORD_HASH=$(echo "$RAW_HASH_OUTPUT" | grep -oE '\$2[ayb]\$[^'\'']+' | tr -d '\r\n')
 
 # Verify hash generation output
 if [[ ! "$PASSWORD_HASH" =~ ^\$2[ayb]\$ ]]; then
     echo "Error: Failed to generate a valid bcrypt hash."
-    echo "Output received: $PASSWORD_HASH"
+    echo "Output received: $RAW_HASH_OUTPUT"
     exit 1
 fi
 
