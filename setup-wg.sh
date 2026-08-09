@@ -40,7 +40,7 @@ sudo usermod -aG docker "$USER"
 echo "--> Configuring kernel network parameters..."
 echo "net.ipv4.ip_forward = 1" | sudo tee /etc/sysctl.d/99-wireguard.conf > /dev/null
 echo "net.ipv4.conf.all.proxy_arp = 1" | sudo tee -a /etc/sysctl.d/99-wireguard.conf > /dev/null
-sudo sysctl --system > /dev/null
+sudo sysctl -p /etc/sysctl.d/99-wireguard.conf > /dev/null
 
 # 6. Fetch Public IP Address
 echo "--> Detecting public IP address..."
