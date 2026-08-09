@@ -40,6 +40,9 @@ echo "--> Enabling and starting Docker service..."
 sudo systemctl enable --now docker
 sudo usermod -aG docker "$USER"
 
+# Apply docker group membership to the current shell environment
+sg docker -c "echo 'Docker group permissions activated.'"
+
 # 5. Enable IP Forwarding & Proxy ARP
 echo "--> Configuring kernel network parameters..."
 echo "net.ipv4.ip_forward = 1" | sudo tee /etc/sysctl.d/99-wireguard.conf > /dev/null
