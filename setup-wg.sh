@@ -5,6 +5,10 @@
 
 set -euo pipefail
 
+# Redirect all output to ~/wginstall.txt while continuing to display on screen
+LOGFILE="${HOME}/wginstall.txt"
+exec > >(tee -a "$LOGFILE") 2>&1
+
 echo "=========================================="
 echo "    wg-easy EC2 Setup & Deployment       "
 echo "=========================================="
