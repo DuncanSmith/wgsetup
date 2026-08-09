@@ -71,12 +71,15 @@ echo "--> Creating compose configuration at ${WORKDIR}..."
 mkdir -p "${WORKDIR}"
 cd "${WORKDIR}"
 
+# Escape $ as $$ so Docker Compose doesn't try to interpolate bcrypt variables
+COMPOSE_PASSWORD_HASH=$(echo "$PASSWORD_HASH" | sed 's/\$/\$\$/g')
+
 cat <<EOF > docker-compose.yml
 services:
   wg-easy:
     environment:
       - WG_HOST=${PUBLIC_IP}
-      - PASSWORD_HASH=${PASSWORD_HASH}
+      - PASSWORD_HASH=${COMPOSE_PASSWORD_HASH}
       - WG_DEFAULT_DNS=1.1.1.1
     image: ghcr.io/wg-easy/wg-easy
     container_name: wg-easy
@@ -93,18 +96,3 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv4.ip_forward=1
 EOF
-
-# 9. Launch Stack
-echo "--> Launching wg-easy container..."
-sudo docker compose up -d
-
-echo ""
-echo "=========================================="
-echo "    Setup Complete!                       "
-echo "=========================================="
-echo "Web UI URL:  http://${PUBLIC_IP}:51821"
-echo ""
-echo "REMINDER: In the AWS EC2 Console:"
-echo " 1. Security Group: Allow UDP 51820 and TCP 51821."
-echo " 2. Instance Settings: Actions -> Networking -> Disable 'Source/destination check'."
-echo "=========================================="
