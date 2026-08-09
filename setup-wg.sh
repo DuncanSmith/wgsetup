@@ -96,3 +96,18 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv4.ip_forward=1
 EOF
+
+# 9. Launch Stack
+echo "--> Launching wg-easy container..."
+sudo docker compose up -d
+
+echo ""
+echo "=========================================="
+echo "    Setup Complete!                       "
+echo "=========================================="
+echo "Web UI URL:  http://${PUBLIC_IP}:51821"
+echo ""
+echo "REMINDER: In the AWS EC2 Console:"
+echo " 1. Security Group: Allow UDP 51820 and TCP 51821."
+echo " 2. Instance Settings: Actions -> Networking -> Disable 'Source/destination check'."
+echo "=========================================="
