@@ -24,18 +24,20 @@ fi
 SUBDOMAIN="awsus11elm"
 DOMAIN="${SUBDOMAIN}.duckdns.org"
 
-# 2. Ensure Docker and Docker Compose are available
+# 2. Ensure Docker is installed
 if ! command -v docker &> /dev/null; then
     echo "Error: Docker is not installed. Please run setup-wg.sh first or install Docker."
     exit 1
 fi
 
-# 3. Create DuckDNS Directory & Compose File
+# 3. Create DuckDNS Directory & Config Folder
 WORKDIR="${HOME}/duckdns"
-echo "--> Creating compose configuration at ${WORKDIR}..."
-mkdir -p "${WORKDIR}"
+CONFIG_DIR="${WORKDIR}/config"
+echo "--> Creating directories at ${WORKDIR}..."
+mkdir -p "${CONFIG_DIR}"
 cd "${WORKDIR}"
 
+# 4. Create Compose File using explicit user paths
 cat <<EOF > docker-compose.yml
 services:
   duckdns:
@@ -43,18 +45,18 @@ services:
     container_name: duckdns
     network_mode: host
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=$(id -u)
+      - PGID=$(id -g)
       - TZ=Etc/UTC
       - SUBDOMAINS=${SUBDOMAIN}
       - TOKEN=${DUCKDNS_TOKEN}
       - LOG_FILE=true
     volumes:
-      - ~/.duckdns/config:/config
+      - ${CONFIG_DIR}:/config
     restart: unless-stopped
 EOF
 
-# 4. Launch Stack
+# 5. Launch Stack
 echo "--> Launching DuckDNS container..."
 sudo docker compose up -d
 
@@ -63,5 +65,9 @@ echo "=========================================="
 echo "    DuckDNS Setup Complete!               "
 echo "=========================================="
 echo "Domain: ${DOMAIN}"
-echo "Logs:   sudo docker logs -f duckdns"
+echo "Config Path: ${CONFIG_DIR}"
+echo ""
+echo "Checking logs (should show OK):"
+sleep 3
+sudo docker logs duckdns | tail -n 10
 echo "=========================================="
