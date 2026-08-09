@@ -24,19 +24,10 @@ sudo dnf update -y || sudo yum update -y
 echo "--> Installing Docker and wireguard-tools..."
 sudo dnf install -y docker wireguard-tools || sudo yum install -y docker wireguard-tools
 
-# 3. Install Docker Compose Plugin (GitHub Release)
+# 3. Install Docker Compose Plugin
 echo "--> Installing Docker Compose CLI plugin..."
-ARCH=$(uname -m)
-if [ "$ARCH" = "x86_64" ]; then
-    COMPOSE_ARCH="x86_64"
-elif [ "$ARCH" = "aarch64" ]; then
-    COMPOSE_ARCH="aarch64"
-else
-    COMPOSE_ARCH="$ARCH"
-fi
-
 sudo mkdir -p /usr/local/lib/docker/cli-plugins
-sudo curl -sSL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-${COMPOSE_ARCH}" \
+sudo curl -sSL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m)" \
     -o /usr/local/lib/docker/cli-plugins/docker-compose
 sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
